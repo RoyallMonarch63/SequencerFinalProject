@@ -24,6 +24,8 @@ AudioConnection          patchCord1(waveform1, dac1);
 #define BRIGHTNESS 15
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
 
+//yo 
+
 byte neopix_gamma[] =
 {
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
