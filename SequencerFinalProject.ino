@@ -24,7 +24,7 @@ AudioConnection          patchCord1(waveform1, dac1);
 #define BRIGHTNESS 15
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
 
-//yo 
+//yo
 
 byte neopix_gamma[] =
 {
@@ -63,6 +63,8 @@ int potPitch[4] = {0, 0, 0, 0};
 int buttonPin[8] = { 24, 25, 26, 27, 28, 29, 30, 31};
 int nextChannelButtonPin = 12;
 int prevChannelButtonPin = 11;
+int nextWavButton = 10;
+int prevWavButton = 9;
 
 int channelDisplayed = 0;
 int previousChan = 0;
@@ -101,15 +103,19 @@ boolean lastBSDown = LOW;
 boolean buttonStateUp = LOW;
 boolean buttonStateDown = LOW;
 
+//WAVEFORM STUDD
+int wavNum = 0;
+char wavForm [4][25] = { WAVEFORM_SINE, WAVEFORM_SAWTOOTH, WAVEFORM_SQUARE, WAVEFORM_TRIANGLE};
+
 void setup()
 {
   Serial.begin(9600);
 
   //waveform stuff
   AudioMemory(12); //always include this when using the Teensy Audio Library
-  waveform1.begin(WAVEFORM_SINE);
-  waveform1.amplitude(0.4);
-  waveform1.frequency(262);
+//  waveform1.begin(WAVEFORM_SINE);
+//  waveform1.amplitude(0.2);
+//  waveform1.frequency(262);
 
   //pinmodes
   for (int i = 0; i < 8; i++)
@@ -129,6 +135,8 @@ void setup()
 
   pinMode(12, INPUT);
   pinMode(11, INPUT);
+  pinMode(10, INPUT);
+  pinMode(9, INPUT);
 
   //LED stuff
   strip.setBrightness(BRIGHTNESS);
@@ -139,10 +147,15 @@ void setup()
 void loop()
 {
   checkButton();
-  buttonSeq();
+  noteSeq();
+
   onLed();
+
   checkChannel();
   chanColor();
+
+  selectWav();
+  wavShape();
   //channelLeds();
 }
 
@@ -231,10 +244,65 @@ void chanColor()
     strip.setBrightness(15);
   }
 }
-//void channelLeds()
-//{
-//
-//}
+
+void selectWav()
+{
+  lastBSUp = buttonStateUp;
+  buttonStateUp = digitalRead(10);
+
+  if (buttonStateUp == HIGH && lastBSUp == LOW)
+  {
+    wavNum++;
+
+    if (wavNum > 3)
+    {
+      wavNum = 0;
+    }
+    Serial.print (wavNum);
+  }
+
+  lastBSDown = buttonStateDown;
+  buttonStateDown = digitalRead(9);
+
+  if (buttonStateDown == HIGH && lastBSDown == LOW)
+  {
+    wavNum--;
+
+    if (wavNum < 0)
+    {
+      wavNum = 3;
+    }
+    Serial.print (wavNum);
+  }
+}
+
+void wavShape()
+{
+  if (wavNum == 0)
+  {
+    waveform1.begin(WAVEFORM_SINE);
+    waveform1.amplitude(0.2);
+    waveform1.frequency(262);
+  }
+  if (wavNum == 1)
+  {
+    waveform1.begin(WAVEFORM_SAWTOOTH);
+    waveform1.amplitude(0.2);
+    waveform1.frequency(262);
+  }
+  if (wavNum == 2)
+  {
+    waveform1.begin(WAVEFORM_SQUARE);
+    waveform1.amplitude(0.2);
+    waveform1.frequency(262);
+  }
+  if (wavNum == 3)
+  {
+    waveform1.begin(WAVEFORM_TRIANGLE);
+    waveform1.amplitude(0.2);
+    waveform1.frequency(262);
+  }
+}
 
 void checkButton()
 {
@@ -276,7 +344,7 @@ void onLed()
   }
 }
 
-void buttonSeq()
+void noteSeq()
 {
   tempo = map (analogRead(A13), 0, 1023, 50, 500);
   int potQuantArray[8] = { 0, 0, 0, 0, 0, 0, 0 , 0};
@@ -304,14 +372,15 @@ void buttonSeq()
     for (int i = 0; i < 7; i++)
     {
       if (on[i][currentStep] == true)
+        //if (buttonState[i] == HIGH && channelDisplayed == 0)
       {
         usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
         usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
 
         //digitalWrite(ledPin[currentStep], HIGH);
         potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
-        strip.setPixelColor( (currentStep), strip.Color(color[0], color[1], color[2]) );
-        strip.show();
+        //        strip.setPixelColor( (currentStep), strip.Color(color[0], color[1], color[2]) );
+        //        strip.show();
         //potPitch[currentStep] = map (analogRead(potPin[currentStep]), 0, 1023, loNote, hiNote);
         potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
         waveform1.frequency(potPitch[currentStep]);
