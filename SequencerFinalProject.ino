@@ -113,9 +113,9 @@ void setup()
 
   //waveform stuff
   AudioMemory(12); //always include this when using the Teensy Audio Library
-//  waveform1.begin(WAVEFORM_SINE);
-//  waveform1.amplitude(0.2);
-//  waveform1.frequency(262);
+  //  waveform1.begin(WAVEFORM_SINE);
+  //  waveform1.amplitude(0.2);
+  //  waveform1.frequency(262);
 
   //pinmodes
   for (int i = 0; i < 8; i++)
@@ -155,8 +155,8 @@ void loop()
   chanColor();
 
   selectWav();
-  wavShape();
-  //channelLeds();
+  //wavShape();
+
 }
 
 void stepUp()
@@ -276,33 +276,33 @@ void selectWav()
   }
 }
 
-void wavShape()
-{
-  if (wavNum == 0)
-  {
-    waveform1.begin(WAVEFORM_SINE);
-    waveform1.amplitude(0.2);
-    waveform1.frequency(262);
-  }
-  if (wavNum == 1)
-  {
-    waveform1.begin(WAVEFORM_SAWTOOTH);
-    waveform1.amplitude(0.2);
-    waveform1.frequency(262);
-  }
-  if (wavNum == 2)
-  {
-    waveform1.begin(WAVEFORM_SQUARE);
-    waveform1.amplitude(0.2);
-    waveform1.frequency(262);
-  }
-  if (wavNum == 3)
-  {
-    waveform1.begin(WAVEFORM_TRIANGLE);
-    waveform1.amplitude(0.2);
-    waveform1.frequency(262);
-  }
-}
+//void wavShape()
+//{
+//  if (wavNum == 0)
+//  {
+//    waveform1.begin(WAVEFORM_SINE);
+//    waveform1.amplitude(0.2);
+//    waveform1.frequency(262);
+//  }
+//  if (wavNum == 1)
+//  {
+//    waveform1.begin(WAVEFORM_SAWTOOTH);
+//    waveform1.amplitude(0.2);
+//    waveform1.frequency(262);
+//  }
+//  if (wavNum == 2)
+//  {
+//    waveform1.begin(WAVEFORM_SQUARE);
+//    waveform1.amplitude(0.2);
+//    waveform1.frequency(262);
+//  }
+//  if (wavNum == 3)
+//  {
+//    waveform1.begin(WAVEFORM_TRIANGLE);
+//    waveform1.amplitude(0.2);
+//    waveform1.frequency(262);
+//  }
+//}
 
 void checkButton()
 {
@@ -377,13 +377,19 @@ void noteSeq()
         usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
         usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
 
-        //digitalWrite(ledPin[currentStep], HIGH);
         potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
         //        strip.setPixelColor( (currentStep), strip.Color(color[0], color[1], color[2]) );
         //        strip.show();
         //potPitch[currentStep] = map (analogRead(potPin[currentStep]), 0, 1023, loNote, hiNote);
         potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
-        waveform1.frequency(potPitch[currentStep]);
+
+//        if (buttonState[i] == HIGH && channelDisplayed == 0)
+//        {
+//          waveform1.begin(WAVEFORM_SINE);
+//          waveform1.amplitude(0.2);
+//          waveform1.frequency(262);
+//          waveform1.frequency(potPitch[currentStep]);
+//        }
       }
     }
     lastStepTime = millis();
