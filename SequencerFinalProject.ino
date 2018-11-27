@@ -88,6 +88,8 @@ unsigned long lastStepTime = 0;
 
 boolean lastButtonState[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
 boolean buttonState[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW };
+boolean lastButtonStateWav[2] = { LOW, LOW};
+boolean buttonStateWav[2] = { LOW, LOW};
 //boolean on[8] = { false, false, false, false, false, false, false, false };
 
 boolean on[4][8] =
@@ -103,7 +105,13 @@ boolean lastBSDown = LOW;
 boolean buttonStateUp = LOW;
 boolean buttonStateDown = LOW;
 
-//WAVEFORM STUDD
+//for WAV select
+boolean lastBSUpWav = LOW;
+boolean lastBSDownWav = LOW;
+boolean buttonStateUpWav = LOW;
+boolean buttonStateDownWav = LOW;
+
+//WAVEFORM STUFF
 int wavNum = 0;
 char wavForm [4][25] = { WAVEFORM_SINE, WAVEFORM_SAWTOOTH, WAVEFORM_SQUARE, WAVEFORM_TRIANGLE};
 
@@ -247,10 +255,10 @@ void chanColor()
 
 void selectWav()
 {
-  lastBSUp = buttonStateUp;
-  buttonStateUp = digitalRead(10);
+  lastBSUpWav = buttonStateUpWav;
+  buttonStateUpWav = digitalRead(10);
 
-  if (buttonStateUp == HIGH && lastBSUp == LOW)
+  if (buttonStateUpWav == HIGH && lastBSUpWav == LOW)
   {
     wavNum++;
 
@@ -261,10 +269,10 @@ void selectWav()
     Serial.print (wavNum);
   }
 
-  lastBSDown = buttonStateDown;
-  buttonStateDown = digitalRead(9);
+  lastBSDownWav = buttonStateDownWav;
+  buttonStateDownWav = digitalRead(9);
 
-  if (buttonStateDown == HIGH && lastBSDown == LOW)
+  if (buttonStateDownWav == HIGH && lastBSDownWav == LOW)
   {
     wavNum--;
 
@@ -362,36 +370,59 @@ void noteSeq()
       stepUp();
     }
 
-    //digitalWrite(ledPin[currentStep], LOW);
-    //    currentStep = currentStep + 1;
-    //    if (currentStep > 7)
-    //    {
-    //      currentStep = 0;
-    //    }
-
-    for (int i = 0; i < 7; i++)
+    if (on[channelDisplayed][currentStep] == true))
     {
-      if (on[i][currentStep] == true)
-        //if (buttonState[i] == HIGH && channelDisplayed == 0)
+      for (int i = 0; i < 7; i++)
       {
-        usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
-        usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
+        if (on[i][currentStep] == true)
 
-        potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
-        //        strip.setPixelColor( (currentStep), strip.Color(color[0], color[1], color[2]) );
-        //        strip.show();
-        //potPitch[currentStep] = map (analogRead(potPin[currentStep]), 0, 1023, loNote, hiNote);
-        potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
+        {
+          usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
+          usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
 
-//        if (buttonState[i] == HIGH && channelDisplayed == 0)
-//        {
-//          waveform1.begin(WAVEFORM_SINE);
-//          waveform1.amplitude(0.2);
-//          waveform1.frequency(262);
-//          waveform1.frequency(potPitch[currentStep]);
-//        }
+          potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
+
+          potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
+
+          //if (buttonState[i] == HIGH && channelDisplayed == 0)
+
+          //waveform1.begin(0.2, potPitch[currentStep], waveform);
+          if (wavNum == 0)
+          {
+            waveform1.begin(WAVEFORM_SINE);
+            waveform1.amplitude(0.2);
+            waveform1.frequency(potPitch[currentStep]);
+          }
+          if (wavNum == 1)
+          {
+            waveform1.begin(WAVEFORM_SAWTOOTH);
+            waveform1.amplitude(0.1);
+            waveform1.frequency(potPitch[currentStep]);
+          }
+          if (wavNum == 2)
+          {
+            waveform1.begin(WAVEFORM_SQUARE);
+            waveform1.amplitude(0.05);
+            waveform1.frequency(potPitch[currentStep]);
+          }
+          if (wavNum == 3)
+          {
+            waveform1.begin(WAVEFORM_TRIANGLE);
+            waveform1.amplitude(0.1);
+            waveform1.frequency(potPitch[currentStep]);
+          }
+
+        }
       }
     }
+    
+    //STOP WAV IF BUTTON NOT LIT
+    if (on[channelDisplayed][currentStep] == false)
+    {
+      waveform1.amplitude(0);
+    }
+
     lastStepTime = millis();
   }
+
 }
