@@ -370,9 +370,9 @@ void noteSeq()
       stepUp();
     }
 
-    if (on[channelDisplayed][currentStep] == true))
+    if (on[channelDisplayed][currentStep] == true)
     {
-      for (int i = 0; i < 7; i++)
+      for (int i = 0; i < 4; i++)
       {
         if (on[i][currentStep] == true)
 
@@ -390,37 +390,77 @@ void noteSeq()
           if (wavNum == 0)
           {
             waveform1.begin(WAVEFORM_SINE);
-            waveform1.amplitude(0.2);
+
+            if (on[channelDisplayed][currentStep] == false)
+            {
+              waveform1.amplitude(0);
+            }
+            if (on[channelDisplayed][currentStep] == true)
+            {
+              waveform1.amplitude(0.2);
+            }
+
+            //waveform1.amplitude(0.2);
             waveform1.frequency(potPitch[currentStep]);
           }
           if (wavNum == 1)
           {
             waveform1.begin(WAVEFORM_SAWTOOTH);
-            waveform1.amplitude(0.1);
+
+            if (on[channelDisplayed][currentStep] == false)
+            {
+              waveform1.amplitude(0);
+            }
+            if (on[channelDisplayed][currentStep] == true)
+            {
+              waveform1.amplitude(0.1);
+            }
+
+            //waveform1.amplitude(0.1);
             waveform1.frequency(potPitch[currentStep]);
           }
           if (wavNum == 2)
           {
             waveform1.begin(WAVEFORM_SQUARE);
-            waveform1.amplitude(0.05);
+
+            if (on[channelDisplayed][currentStep] == false)
+            {
+              waveform1.amplitude(0);
+            }
+            if (on[channelDisplayed][currentStep] == true)
+            {
+              waveform1.amplitude(0.5);
+            }
+
+            //waveform1.amplitude(0.05);
             waveform1.frequency(potPitch[currentStep]);
           }
           if (wavNum == 3)
           {
             waveform1.begin(WAVEFORM_TRIANGLE);
-            waveform1.amplitude(0.1);
+
+            if (on[channelDisplayed][currentStep] == false)
+            {
+              waveform1.amplitude(0);
+            }
+            if (on[channelDisplayed][currentStep] == true)
+            {
+              waveform1.amplitude(0.1);
+            }
+            
+            //waveform1.amplitude(0.1);
             waveform1.frequency(potPitch[currentStep]);
           }
 
         }
       }
     }
-    
+
     //STOP WAV IF BUTTON NOT LIT
-    if (on[channelDisplayed][currentStep] == false)
-    {
-      waveform1.amplitude(0);
-    }
+    //    if (channelDisplayed == 0 &&  ==on[channelDisplayed][currentStep] false)
+    //    {
+    //      waveform1.amplitude(0);
+    //    }
 
     lastStepTime = millis();
   }
