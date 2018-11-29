@@ -5,11 +5,40 @@
 #include <SD.h>
 #include <SerialFlash.h>
 
-// GUItool: begin automatically generated code
-AudioSynthWaveform       waveform1;      //xy=237,252
-AudioOutputAnalog        dac1;           //xy=445,252
-AudioConnection          patchCord1(waveform1, dac1);
-// GUItool: end automatically generated code
+//drum stuff
+#include <synth_simple_drum.h>
+
+#include <Audio.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
+
+//Mixer Stuff
+AudioSynthSimpleDrum     drum2;          //xy=327,337
+AudioSynthSimpleDrum     drum1;          //xy=329,271
+AudioSynthWaveform       waveform1;      //xy=336,217
+AudioSynthSimpleDrum     drum3;          //xy=352,411
+AudioMixer4              mixer1;         //xy=497,306
+AudioOutputAnalog        dac1;           //xy=658,285
+AudioConnection          patchCord1(drum2, 0, mixer1, 2);
+AudioConnection          patchCord2(drum1, 0, mixer1, 1);
+AudioConnection          patchCord3(waveform1, 0, mixer1, 0);
+AudioConnection          patchCord4(drum3, 0, mixer1, 3);
+AudioConnection          patchCord5(mixer1, dac1);
+
+//AudioOutputAnalog        dac1;           //xy=445,252
+//AudioSynthSimpleDrum     drum1;          //xy=431,197
+//AudioSynthSimpleDrum     drum2;          //xy=399,244
+//AudioSynthSimpleDrum     drum3;          //xy=424,310
+//AudioSynthWaveform       waveform1;      //xy=237,252
+//AudioMixer4              mixer1;         //xy=737,265
+//AudioConnection          patchCord2(drum1, 0, mixer1, 0);
+//AudioConnection          patchCord3(drum2, 0, mixer1, 1);
+//AudioConnection          patchCord4(drum3, 0, mixer1, 2);
+//AudioConnection          patchCord1(waveform1, 0, mixer1, 3);
+//AudioConnection          patchCord5(mixer1, 0, dac1, 0);
+//AudioConnection          patchCord6(mixer1, 0, dac1, 1);
 
 //neopixelstuff
 //#include "BetterButton.h"
@@ -23,8 +52,6 @@ AudioConnection          patchCord1(waveform1, dac1);
 #define NUM_LEDS 8
 #define BRIGHTNESS 15
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
-
-//yo
 
 byte neopix_gamma[] =
 {
@@ -45,10 +72,6 @@ byte neopix_gamma[] =
   177, 180, 182, 184, 186, 189, 191, 193, 196, 198, 200, 203, 205, 208, 210, 213,
   215, 218, 220, 223, 225, 228, 231, 233, 236, 239, 241, 244, 247, 249, 252, 255
 };
-
-//LED ARRAYS
-//int ledPin[4] = { 20, 18, 16, 14 };
-//int channelLed[3] = { 3, 4, 5 };
 
 //COLORS
 int color[3] = {0, 0, 0};
@@ -90,7 +113,6 @@ boolean lastButtonState[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
 boolean buttonState[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW };
 boolean lastButtonStateWav[2] = { LOW, LOW};
 boolean buttonStateWav[2] = { LOW, LOW};
-//boolean on[8] = { false, false, false, false, false, false, false, false };
 
 boolean on[4][8] =
 {
@@ -117,26 +139,19 @@ char wavForm [4][25] = { WAVEFORM_SINE, WAVEFORM_SAWTOOTH, WAVEFORM_SQUARE, WAVE
 
 void setup()
 {
-  Serial.begin(9600);
+  //Serial.begin(9600);
+  Serial.begin(115200);
 
   //waveform stuff
-  AudioMemory(12); //always include this when using the Teensy Audio Library
-  //  waveform1.begin(WAVEFORM_SINE);
-  //  waveform1.amplitude(0.2);
-  //  waveform1.frequency(262);
+  AudioMemory(50); //always include this when using the Teensy Audio Library
+  //AudioMemory(15);
 
   //pinmodes
   for (int i = 0; i < 8; i++)
   {
-    //pinMode(ledPin[i], OUTPUT);
     pinMode(potPin[i], INPUT);
     pinMode(buttonPin[i], INPUT);
   }
-
-  //  for (int i = 0; i < 3; i++)
-  //  {
-  //    pinMode(channelLed[i], OUTPUT);
-  //  }
 
   pinMode(tempoPot, INPUT);
   pinMode(backSwitch, INPUT);
@@ -163,8 +178,19 @@ void loop()
   chanColor();
 
   selectWav();
-  //wavShape();
 
+  //testDrum();
+}
+
+void testDrum()
+{
+  tempo = map (analogRead(A13), 0, 1023, 50, 500);
+  drum1.noteOn();
+  delay(tempo);
+  drum2.noteOn();
+  delay(tempo);
+  drum3.noteOn();
+  delay(tempo);
 }
 
 void stepUp()
@@ -284,34 +310,6 @@ void selectWav()
   }
 }
 
-//void wavShape()
-//{
-//  if (wavNum == 0)
-//  {
-//    waveform1.begin(WAVEFORM_SINE);
-//    waveform1.amplitude(0.2);
-//    waveform1.frequency(262);
-//  }
-//  if (wavNum == 1)
-//  {
-//    waveform1.begin(WAVEFORM_SAWTOOTH);
-//    waveform1.amplitude(0.2);
-//    waveform1.frequency(262);
-//  }
-//  if (wavNum == 2)
-//  {
-//    waveform1.begin(WAVEFORM_SQUARE);
-//    waveform1.amplitude(0.2);
-//    waveform1.frequency(262);
-//  }
-//  if (wavNum == 3)
-//  {
-//    waveform1.begin(WAVEFORM_TRIANGLE);
-//    waveform1.amplitude(0.2);
-//    waveform1.frequency(262);
-//  }
-//}
-
 void checkButton()
 {
   for (int i = 0; i < 8; i++)
@@ -377,14 +375,10 @@ void noteSeq()
       //usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
 
       potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
-
       potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
-
-      //if (buttonState[i] == HIGH && channelDisplayed == 0)
-
-      //waveform1.begin(0.2, potPitch[currentStep], waveform);
     }
 
+//SYNTH SEQUENCE
     if (wavNum == 0)
     {
       waveform1.begin(WAVEFORM_SINE);
@@ -398,9 +392,6 @@ void noteSeq()
       {
         waveform1.amplitude(0);
       }
-
-      //waveform1.amplitude(0.2);
-      //waveform1.frequency(potPitch[currentStep]);
     }
 
     if (wavNum == 1)
@@ -416,9 +407,6 @@ void noteSeq()
       {
         waveform1.amplitude(0);
       }
-
-      //waveform1.amplitude(0.1);
-      // waveform1.frequency(potPitch[currentStep]);
     }
 
     if (wavNum == 2)
@@ -427,16 +415,13 @@ void noteSeq()
 
       if (on[0][currentStep] == true)
       {
-        waveform1.amplitude(0.5);
+        waveform1.amplitude(0.1);
         waveform1.frequency(potPitch[currentStep]);
       }
       else
       {
         waveform1.amplitude(0);
       }
-
-      //waveform1.amplitude(0.05);
-      //waveform1.frequency(potPitch[currentStep]);
     }
 
     if (wavNum == 3)
@@ -452,19 +437,43 @@ void noteSeq()
       {
         waveform1.amplitude(0);
       }
-
-      //waveform1.amplitude(0.1);
-      //waveform1.frequency(potPitch[currentStep]);
     }
 
-    //STOP WAV IF BUTTON NOT LIT
-    //    if (channelDisplayed == 0 &&  ==on[channelDisplayed][currentStep] false)
-    //    {
-    //      waveform1.amplitude(0);
-    //    }
+//DRUM SEQUENCE
+
+    AudioNoInterrupts();
+    drum1.frequency(60);
+    drum1.length(1500);
+    drum1.secondMix(1.0);
+    drum1.pitchMod(0.55);
+
+    drum2.frequency(2000);
+    drum2.length(50);
+    drum2.secondMix(0.0);
+    drum2.pitchMod(0.0);
+
+    drum3.frequency(550);
+    drum3.length(400);
+    drum3.secondMix(1.0);
+    drum3.pitchMod(0.5);
+    AudioInterrupts();
+
+    if (on[1][currentStep] == true)
+    {
+      drum1.noteOn();
+      Serial.println ("Hi");
+    }
+
+    if (on[2][currentStep] == true)
+    {
+      drum2.noteOn();
+    }
+
+    if (on[3][currentStep] == true)
+    {
+      drum3.noteOn();
+    }
 
     lastStepTime = millis();
   }
-
-
 }
