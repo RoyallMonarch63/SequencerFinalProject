@@ -227,7 +227,7 @@ void checkOct()
   if (digitalRead(A14) == HIGH)
   {
     int midiNotes[4] = {72, 74, 76, 77};
-    Serial.print ("AY");
+    Serial.print ("AY ");
   }
 }
 
