@@ -81,7 +81,8 @@ int previousChan = 0;
 int currentChan = 0;
 
 //MIDI
-int midiNotes[4] = {60, 62, 64, 65};
+int midiNotes[4] = {60, 62, 64, 66};
+int midiNotesOct[4] = {72, 74, 76, 78};
 //{60, 62, 64, 65, 67, 69, 71, 72};
 int loNote = 261.63;
 int hiNote = 523.25;
@@ -93,8 +94,8 @@ int midiSwitch = 35;
 //(A16)
 int backSwitch = 34;
 //(A15)
-int octaveSwitch = 33;
-//(A14)
+int octaveSwitch = 22;
+//(A8)
 
 //STATE STUFF
 int currentStep = 0;
@@ -171,20 +172,21 @@ void loop()
 
   selectWav();
 
-  checkOct();
+  //checkOct();
 
   //testDrum();
 
   //testSwitch();
 }
 
-void testSwitch()
-{
-  if (analogRead(A14) == LOW)
-  {
-    Serial.print("it work");
-  }
-}
+//void testSwitch()
+//{
+//  if (analogRead(A8) == HIGH)
+//  {
+//    //Serial.print("it work ");
+//    //delay (500);
+//  }
+//}
 
 void testDrum()
 {
@@ -217,19 +219,20 @@ void stepDown()
   }
 }
 
-void checkOct()
-{
-  if (digitalRead(A14) == LOW)
-  {
-    int midiNotes[4] = {60, 62, 64, 65};
-  }
-
-  if (digitalRead(A14) == HIGH)
-  {
-    int midiNotes[4] = {72, 74, 76, 77};
-    Serial.print ("AY ");
-  }
-}
+//void checkOct()
+//{
+//  if (digitalRead() == LOW)
+//  {
+//    int midiNotes[4] = {60, 62, 64, 66};
+//  }
+//
+//  if (digitalRead(22) == HIGH)
+//  {
+//    int midiNotes[4] = {72, 74, 76, 78};
+//    //Serial.print ("AY ");
+//    //delay (500);
+//  }
+//}
 
 void checkChannel()
 {
@@ -373,6 +376,16 @@ void noteSeq()
   tempo = map (analogRead(A13), 0, 1023, 50, 500);
   int potQuantArray[8] = { 0, 0, 0, 0, 0, 0, 0 , 0};
 
+  if (digitalRead(octaveSwitch) == LOW)
+  {
+    int midiNotes[4] = {60, 62, 64, 66};
+  }
+
+  if (digitalRead(octaveSwitch) == HIGH)
+  {
+    int midiNotes[4] = {72, 74, 76, 78};
+  }
+
   if (millis() > lastStepTime + tempo)
   {
 
@@ -381,8 +394,22 @@ void noteSeq()
     {
       if (on[i][currentStep] == true)
       {
-        usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
-        usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
+        if (digitalRead(octaveSwitch) == LOW)
+        {
+          //int midiNotes[4] = {60, 62, 64, 66};
+          usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
+          usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
+          Serial.println(midiNotes[i]);
+        }
+
+        if (digitalRead(octaveSwitch) == HIGH)
+        {
+          //int midiNotes[4] = {72, 74, 76, 78};
+          usbMIDI.sendNoteOff(midiNotesOct[i], 127, 1);
+          usbMIDI.sendNoteOn(midiNotesOct[i], 127, 1);
+          Serial.println(midiNotesOct[i]);
+        }
+
       }
     }
 
@@ -465,7 +492,6 @@ void noteSeq()
     }
 
     //DRUM SEQUENCE
-
     AudioNoInterrupts();
     drum1.frequency(60);
     drum1.length(1500);
@@ -486,7 +512,7 @@ void noteSeq()
     if (on[1][currentStep] == true)
     {
       drum1.noteOn();
-      Serial.println ("Hi");
+      //Serial.println ("Hi");
     }
 
     if (on[2][currentStep] == true)
