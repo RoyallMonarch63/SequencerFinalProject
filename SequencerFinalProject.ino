@@ -89,9 +89,12 @@ int loMidi = 60;
 int hiMidi = 72;
 
 //SWITCHES
-int quantSwitch = 33;
+int midiSwitch = 35;
+//(A16)
 int backSwitch = 34;
-int octaveSwitch = 35;
+//(A15)
+int octaveSwitch = 33;
+//(A14)
 
 //STATE STUFF
 int currentStep = 0;
@@ -168,16 +171,16 @@ void loop()
 
   selectWav();
 
-  //checkOct();
+  checkOct();
 
   //testDrum();
 
-  testSwitch();
+  //testSwitch();
 }
 
 void testSwitch()
 {
-  if (analogRead(A16) == LOW)
+  if (analogRead(A14) == LOW)
   {
     Serial.print("it work");
   }
@@ -216,12 +219,12 @@ void stepDown()
 
 void checkOct()
 {
-  if (digitalRead(A16) == LOW)
+  if (digitalRead(A14) == LOW)
   {
     int midiNotes[4] = {60, 62, 64, 65};
   }
 
-  if (digitalRead(A16) == HIGH)
+  if (digitalRead(A14) == HIGH)
   {
     int midiNotes[4] = {72, 74, 76, 77};
     Serial.print ("AY");
