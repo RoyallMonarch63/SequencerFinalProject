@@ -27,19 +27,6 @@ AudioConnection          patchCord3(waveform1, 0, mixer1, 0);
 AudioConnection          patchCord4(drum3, 0, mixer1, 3);
 AudioConnection          patchCord5(mixer1, dac1);
 
-//AudioOutputAnalog        dac1;           //xy=445,252
-//AudioSynthSimpleDrum     drum1;          //xy=431,197
-//AudioSynthSimpleDrum     drum2;          //xy=399,244
-//AudioSynthSimpleDrum     drum3;          //xy=424,310
-//AudioSynthWaveform       waveform1;      //xy=237,252
-//AudioMixer4              mixer1;         //xy=737,265
-//AudioConnection          patchCord2(drum1, 0, mixer1, 0);
-//AudioConnection          patchCord3(drum2, 0, mixer1, 1);
-//AudioConnection          patchCord4(drum3, 0, mixer1, 2);
-//AudioConnection          patchCord1(waveform1, 0, mixer1, 3);
-//AudioConnection          patchCord5(mixer1, 0, dac1, 0);
-//AudioConnection          patchCord6(mixer1, 0, dac1, 1);
-
 //neopixelstuff
 //#include "BetterButton.h"
 #include <Adafruit_NeoPixel.h>
@@ -94,7 +81,8 @@ int previousChan = 0;
 int currentChan = 0;
 
 //MIDI
-int midiNotes[8] = {60, 62, 64, 65, 67, 69, 71, 72,};
+int midiNotes[4] = {60, 62, 64, 65};
+//{60, 62, 64, 65, 67, 69, 71, 72};
 int loNote = 261.63;
 int hiNote = 523.25;
 int loMidi = 60;
@@ -155,6 +143,7 @@ void setup()
 
   pinMode(tempoPot, INPUT);
   pinMode(backSwitch, INPUT);
+  pinMode(octaveSwitch, INPUT);
 
   pinMode(12, INPUT);
   pinMode(11, INPUT);
@@ -179,7 +168,19 @@ void loop()
 
   selectWav();
 
+  //checkOct();
+
   //testDrum();
+
+  testSwitch();
+}
+
+void testSwitch()
+{
+  if (analogRead(A16) == LOW)
+  {
+    Serial.print("it work");
+  }
 }
 
 void testDrum()
@@ -210,6 +211,20 @@ void stepDown()
   if (currentStep < 0)
   {
     currentStep = 7;
+  }
+}
+
+void checkOct()
+{
+  if (digitalRead(A16) == LOW)
+  {
+    int midiNotes[4] = {60, 62, 64, 65};
+  }
+
+  if (digitalRead(A16) == HIGH)
+  {
+    int midiNotes[4] = {72, 74, 76, 77};
+    Serial.print ("AY");
   }
 }
 
@@ -358,6 +373,16 @@ void noteSeq()
   if (millis() > lastStepTime + tempo)
   {
 
+    //MIDI SEQUENCE
+    for (int i = 0; i < 4; i++)
+    {
+      if (on[i][currentStep] == true)
+      {
+        usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
+        usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
+      }
+    }
+
     //if the backwards switch is on, step 3 - 0
     if (digitalRead(backSwitch) == HIGH)
     {
@@ -371,14 +396,11 @@ void noteSeq()
     if (on[0][currentStep] == true)
 
     {
-      //usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
-      //usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
-
       potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
       potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
     }
 
-//SYNTH SEQUENCE
+    //SYNTH SEQUENCE
     if (wavNum == 0)
     {
       waveform1.begin(WAVEFORM_SINE);
@@ -430,7 +452,7 @@ void noteSeq()
 
       if (on[0][currentStep] == true)
       {
-        waveform1.amplitude(0.1);
+        waveform1.amplitude(0.3);
         waveform1.frequency(potPitch[currentStep]);
       }
       else
@@ -439,7 +461,7 @@ void noteSeq()
       }
     }
 
-//DRUM SEQUENCE
+    //DRUM SEQUENCE
 
     AudioNoInterrupts();
     drum1.frequency(60);
@@ -447,15 +469,15 @@ void noteSeq()
     drum1.secondMix(1.0);
     drum1.pitchMod(0.55);
 
-    drum2.frequency(2000);
-    drum2.length(50);
-    drum2.secondMix(0.0);
-    drum2.pitchMod(0.0);
+    drum2.frequency(1000);
+    drum2.length(15);
+    drum2.secondMix(0.9);
+    drum2.pitchMod(0.8);
 
-    drum3.frequency(550);
-    drum3.length(400);
-    drum3.secondMix(1.0);
-    drum3.pitchMod(0.5);
+    drum3.frequency(3800);
+    drum3.length(10);
+    drum3.secondMix(0.4);
+    drum3.pitchMod(0.6);
     AudioInterrupts();
 
     if (on[1][currentStep] == true)
