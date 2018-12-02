@@ -90,7 +90,8 @@ int currentChan = 0;
 //MIDI
 int midiNotes[4] = {60, 62, 64, 66};
 int midiNotesOct[4] = {72, 74, 76, 78};
-//{60, 62, 64, 65, 67, 69, 71, 72};
+int keyMidi[8] = {60, 62, 64, 65, 67, 69, 71, 72};
+int keyMidiOct[8] = {72, 74, 76, 77, 79, 81, 93, 94};
 int loNote = 261.63;
 int hiNote = 523.25;
 int loMidi = 60;
@@ -343,23 +344,44 @@ void onLed()
 {
   tempo = map (analogRead(A13), 0, 1023, 50, 500);
 
-  for (int i = 0; i < 8; i++)
+  if (digitalRead(midiSwitch) == HIGH)
   {
-    if (on[channelDisplayed][i] == true || currentStep == i)
+    for (int i = 0; i < 8; i++)
     {
-      strip.setPixelColor( (i), strip.Color(color[0], color[1], color[2]) );
-      strip.show();
+      if (buttonState[i] == HIGH)
+      {
+        strip.setPixelColor( (i), strip.Color(color[0], color[1], color[2]) );
+        strip.show();
+      }
+      else if (buttonState[i] == LOW)
+      {
+        strip.setPixelColor( (i), strip.Color(000, 000, 000) );
+        strip.show();
+      }
     }
-    else if (on[channelDisplayed][i] == false)
+  }
+
+  if (digitalRead(midiSwitch) == LOW)
+  {
+    for (int i = 0; i < 8; i++)
     {
-      strip.setPixelColor( (i), strip.Color(000, 000, 000) );
-      strip.show();
+      if (on[channelDisplayed][i] == true || currentStep == i)
+      {
+        strip.setPixelColor( (i), strip.Color(color[0], color[1], color[2]) );
+        strip.show();
+      }
+      else if (on[channelDisplayed][i] == false)
+      {
+        strip.setPixelColor( (i), strip.Color(000, 000, 000) );
+        strip.show();
+      }
     }
   }
 }
 
 void noteSeq()
 {
+  //SET VALUES
   tempo = map (analogRead(A13), 0, 1023, 50, 500);
   int potQuantArray[8] = { 0, 0, 0, 0, 0, 0, 0 , 0};
 
@@ -373,152 +395,187 @@ void noteSeq()
     int midiNotes[4] = {72, 74, 76, 78};
   }
 
-  if (millis() > lastStepTime + tempo)
+  //DO KEYBOARD
+  if (digitalRead(midiSwitch) == HIGH)
   {
-    //if the backwards switch is on, step 3 - 0
-    if (digitalRead(backSwitch) == HIGH)
-    {
-      stepDown();
-    }
-    else
-    {
-      stepUp();
-    }
+    keyboardMidi();
+  }
 
-    //MIDI SEQUENCE
-    for (int i = 0; i < 4; i++)
+  //DO SEQ
+  if (digitalRead(midiSwitch) == LOW)
+  {
+    //SET CLOCK
+    if (millis() > lastStepTime + tempo)
     {
-      if (on[i][currentStep] == true)
+      //SET DIRECTION
+      if (digitalRead(backSwitch) == HIGH)
+      {
+        stepDown();
+      }
+      else
+      {
+        stepUp();
+      }
+
+      //MIDI SEQUENCE
+      for (int i = 0; i < 4; i++)
+      {
+        if (on[i][currentStep] == true)
+        {
+          if (digitalRead(octaveSwitch) == LOW)
+          {
+            //int midiNotes[4] = {60, 62, 64, 66};
+            usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
+            usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
+            Serial.println(midiNotes[i]);
+          }
+
+          if (digitalRead(octaveSwitch) == HIGH)
+          {
+            //int midiNotes[4] = {72, 74, 76, 78};
+            usbMIDI.sendNoteOff(midiNotesOct[i], 127, 1);
+            usbMIDI.sendNoteOn(midiNotesOct[i], 127, 1);
+            Serial.println(midiNotesOct[i]);
+          }
+        }
+      }
+
+      //TEENSY SEQUENCE
+      if (on[0][currentStep] == true)
       {
         if (digitalRead(octaveSwitch) == LOW)
         {
-          //int midiNotes[4] = {60, 62, 64, 66};
-          usbMIDI.sendNoteOff(midiNotes[i], 127, 1);
-          usbMIDI.sendNoteOn(midiNotes[i], 127, 1);
-          Serial.println(midiNotes[i]);
+          potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
+          potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
         }
-
         if (digitalRead(octaveSwitch) == HIGH)
         {
-          //int midiNotes[4] = {72, 74, 76, 78};
-          usbMIDI.sendNoteOff(midiNotesOct[i], 127, 1);
-          usbMIDI.sendNoteOn(midiNotesOct[i], 127, 1);
-          Serial.println(midiNotesOct[i]);
+          potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
+          potPitch[currentStep] = hiNote * pow(2, potQuantArray[currentStep] / 12.0);
         }
-
       }
-    }
 
-    if (on[0][currentStep] == true)
-
-    {
-      if (digitalRead(octaveSwitch) == LOW)
+      //SYNTH SEQUENCE
+      if (wavNum == 0)
       {
-        potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
-        potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
+        waveform1.begin(WAVEFORM_SINE);
+
+        if (on[0][currentStep] == true)
+        {
+          waveform1.amplitude(0.2);
+          waveform1.frequency(potPitch[currentStep]);
+        }
+        else
+        {
+          waveform1.amplitude(0);
+        }
       }
+
+      if (wavNum == 1)
+      {
+        waveform1.begin(WAVEFORM_SAWTOOTH);
+
+        if (on[0][currentStep] == true)
+        {
+          waveform1.amplitude(0.1);
+          waveform1.frequency(potPitch[currentStep]);
+        }
+        else
+        {
+          waveform1.amplitude(0);
+        }
+      }
+
+      if (wavNum == 2)
+      {
+        waveform1.begin(WAVEFORM_SQUARE);
+
+        if (on[0][currentStep] == true)
+        {
+          waveform1.amplitude(0.1);
+          waveform1.frequency(potPitch[currentStep]);
+        }
+        else
+        {
+          waveform1.amplitude(0);
+        }
+      }
+
+      if (wavNum == 3)
+      {
+        waveform1.begin(WAVEFORM_TRIANGLE);
+
+        if (on[0][currentStep] == true)
+        {
+          waveform1.amplitude(0.3);
+          waveform1.frequency(potPitch[currentStep]);
+        }
+        else
+        {
+          waveform1.amplitude(0);
+        }
+      }
+
+      //DRUM SEQUENCE
+      AudioNoInterrupts();
+      drum1.frequency(60);
+      drum1.length(1500);
+      drum1.secondMix(1.0);
+      drum1.pitchMod(0.55);
+
+      drum2.frequency(1000);
+      drum2.length(15);
+      drum2.secondMix(0.9);
+      drum2.pitchMod(0.8);
+
+      drum3.frequency(3800);
+      drum3.length(10);
+      drum3.secondMix(0.4);
+      drum3.pitchMod(0.6);
+      AudioInterrupts();
+
+      if (on[1][currentStep] == true)
+      {
+        drum1.noteOn();
+      }
+
+      if (on[2][currentStep] == true)
+      {
+        drum2.noteOn();
+      }
+
+      if (on[3][currentStep] == true)
+      {
+        drum3.noteOn();
+      }
+
+      lastStepTime = millis();
+    }
+  }
+}
+
+void keyboardMidi()
+{
+  int keyMidi[8] = {60, 62, 64, 65, 67, 69, 71, 72};
+  int keyMidiOct[8] = {72, 74, 76, 77, 79, 81, 93, 94};
+
+  for (int i = 0; i < 8; i++)
+  {
+    lastButtonState[i] = buttonState[i];
+    buttonState[i] = digitalRead(buttonPin[i]);
+
+    if (buttonState[i] == HIGH && lastButtonState[i] == LOW)
+    {
       if (digitalRead(octaveSwitch) == HIGH)
       {
-        potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
-        potPitch[currentStep] = hiNote * pow(2, potQuantArray[currentStep] / 12.0);
+        usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
+        usbMIDI.sendNoteOn(keyMidiOct[i], 127, 1);
+      }
+      if (digitalRead(octaveSwitch) == LOW)
+      {
+        usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
+        usbMIDI.sendNoteOn(keyMidi[i], 127, 1);
       }
     }
-
-    //SYNTH SEQUENCE
-    if (wavNum == 0)
-    {
-      waveform1.begin(WAVEFORM_SINE);
-
-      if (on[0][currentStep] == true)
-      {
-        waveform1.amplitude(0.2);
-        waveform1.frequency(potPitch[currentStep]);
-      }
-      else
-      {
-        waveform1.amplitude(0);
-      }
-    }
-
-    if (wavNum == 1)
-    {
-      waveform1.begin(WAVEFORM_SAWTOOTH);
-
-      if (on[0][currentStep] == true)
-      {
-        waveform1.amplitude(0.1);
-        waveform1.frequency(potPitch[currentStep]);
-      }
-      else
-      {
-        waveform1.amplitude(0);
-      }
-    }
-
-    if (wavNum == 2)
-    {
-      waveform1.begin(WAVEFORM_SQUARE);
-
-      if (on[0][currentStep] == true)
-      {
-        waveform1.amplitude(0.1);
-        waveform1.frequency(potPitch[currentStep]);
-      }
-      else
-      {
-        waveform1.amplitude(0);
-      }
-    }
-
-    if (wavNum == 3)
-    {
-      waveform1.begin(WAVEFORM_TRIANGLE);
-
-      if (on[0][currentStep] == true)
-      {
-        waveform1.amplitude(0.3);
-        waveform1.frequency(potPitch[currentStep]);
-      }
-      else
-      {
-        waveform1.amplitude(0);
-      }
-    }
-
-    //DRUM SEQUENCE
-    AudioNoInterrupts();
-    drum1.frequency(60);
-    drum1.length(1500);
-    drum1.secondMix(1.0);
-    drum1.pitchMod(0.55);
-
-    drum2.frequency(1000);
-    drum2.length(15);
-    drum2.secondMix(0.9);
-    drum2.pitchMod(0.8);
-
-    drum3.frequency(3800);
-    drum3.length(10);
-    drum3.secondMix(0.4);
-    drum3.pitchMod(0.6);
-    AudioInterrupts();
-
-    if (on[1][currentStep] == true)
-    {
-      drum1.noteOn();
-      //Serial.println ("Hi");
-    }
-
-    if (on[2][currentStep] == true)
-    {
-      drum2.noteOn();
-    }
-
-    if (on[3][currentStep] == true)
-    {
-      drum3.noteOn();
-    }
-
-    lastStepTime = millis();
   }
 }
