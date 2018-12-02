@@ -91,7 +91,7 @@ int currentChan = 0;
 int midiNotes[4] = {60, 62, 64, 66};
 int midiNotesOct[4] = {72, 74, 76, 78};
 int keyMidi[8] = {60, 62, 64, 65, 67, 69, 71, 72};
-int keyMidiOct[8] = {72, 74, 76, 77, 79, 81, 93, 94};
+int keyMidiOct[8] = {72, 74, 76, 77, 79, 81, 83, 84};
 int loNote = 261.63;
 int hiNote = 523.25;
 int loMidi = 60;
@@ -321,20 +321,28 @@ void selectWav()
 
 void checkButton()
 {
-  for (int i = 0; i < 8; i++)
+  if (digitalRead(midiSwitch) == HIGH)
   {
-    lastButtonState[i] = buttonState[i];
-    buttonState[i] = digitalRead(buttonPin[i]);
+    keyboardMidi();
+  }
 
-    if (buttonState[i] == HIGH && lastButtonState[i] == LOW)
+  if (digitalRead(midiSwitch) == LOW)
+  {
+    for (int i = 0; i < 8; i++)
     {
-      if (on[channelDisplayed][i] == false)
+      lastButtonState[i] = buttonState[i];
+      buttonState[i] = digitalRead(buttonPin[i]);
+
+      if (buttonState[i] == HIGH && lastButtonState[i] == LOW)
       {
-        on[channelDisplayed][i] = true;
-      }
-      else if (on[channelDisplayed][i] == true)
-      {
-        on[channelDisplayed][i] = false;
+        if (on[channelDisplayed][i] == false)
+        {
+          on[channelDisplayed][i] = true;
+        }
+        else if (on[channelDisplayed][i] == true)
+        {
+          on[channelDisplayed][i] = false;
+        }
       }
     }
   }
@@ -558,7 +566,7 @@ void noteSeq()
 void keyboardMidi()
 {
   int keyMidi[8] = {60, 62, 64, 65, 67, 69, 71, 72};
-  int keyMidiOct[8] = {72, 74, 76, 77, 79, 81, 93, 94};
+  int keyMidiOct[8] = {72, 74, 76, 77, 79, 81, 83, 84};
 
   for (int i = 0; i < 8; i++)
   {
@@ -567,23 +575,22 @@ void keyboardMidi()
 
     if (buttonState[i] == HIGH && lastButtonState[i] == LOW)
     {
-      usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
-      usbMIDI.sendNoteOn(keyMidi[i], 127, 1);
-      //      if (digitalRead(octaveSwitch) == HIGH)
-      //      {
-      //        usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
-      //        usbMIDI.sendNoteOn(keyMidiOct[i], 127, 1);
-      //      }
-      //      if (digitalRead(octaveSwitch) == LOW)
-      //      {
-      //        usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
-      //        usbMIDI.sendNoteOn(keyMidi[i], 127, 1);
-      //      }
+      if (digitalRead(octaveSwitch) == HIGH)
+      {
+        usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
+        usbMIDI.sendNoteOn(keyMidiOct[i], 127, 1);
+      }
+      if (digitalRead(octaveSwitch) == LOW)
+      {
+        usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
+        usbMIDI.sendNoteOn(keyMidi[i], 127, 1);
+      }
     }
 
-    if (buttonState[i] == LOW)
+    if (buttonState[i] == LOW && lastButtonState[i] == HIGH)
     {
       usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
+      usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
     }
   }
 }
