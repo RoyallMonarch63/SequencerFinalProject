@@ -1,6 +1,6 @@
 //TO DO
 //-sync midi clock [/]
-//-switch to keyboard mode (MIDI AND SYNTH)
+//-switch to keyboard mode (MIDI AND SYNTH) [/]
 //-octave apply to teensy synth [/]
 //-volume output up [/]
 //-blink lights if already on
@@ -92,6 +92,8 @@ int midiNotes[4] = {60, 62, 64, 66};
 int midiNotesOct[4] = {72, 74, 76, 78};
 int keyMidi[8] = {60, 62, 64, 65, 67, 69, 71, 72};
 int keyMidiOct[8] = {72, 74, 76, 77, 79, 81, 83, 84};
+int wavPitch[8] = {261.63, 293.67, 329.63, 349.23, 392, 440, 493.88, 523.25};
+int wavPitchOct[8] = {523.25, 587.33, 659.26, 698.46, 783.99, 880, 987.77, 1046.5};
 int loNote = 261.63;
 int hiNote = 523.25;
 int loMidi = 60;
@@ -171,7 +173,7 @@ void setup()
   //Audio Stuff
   for (int i = 0; i < 4; i++)
   {
-    mixer1.gain(i, 4);
+    mixer1.gain(i, 2);
   }
 }
 
@@ -204,21 +206,27 @@ void testMidSwitch()
 
 void stepUp()
 {
-  //step 0-7
-  currentStep = currentStep + 1;
-  if (currentStep > 7)
+  if (digitalRead(midiSwitch) == LOW)
   {
-    currentStep = 0;
+    //step 0-7
+    currentStep = currentStep + 1;
+    if (currentStep > 7)
+    {
+      currentStep = 0;
+    }
   }
 }
 
 void stepDown()
 {
-  //step 7-0
-  currentStep = currentStep - 1;
-  if (currentStep < 0)
+  if (digitalRead(midiSwitch) == LOW)
   {
-    currentStep = 7;
+    //step 7-0
+    currentStep = currentStep - 1;
+    if (currentStep < 0)
+    {
+      currentStep = 7;
+    }
   }
 }
 
@@ -346,6 +354,7 @@ void checkButton()
       }
     }
   }
+
 }
 
 void onLed()
@@ -373,7 +382,11 @@ void onLed()
   {
     for (int i = 0; i < 8; i++)
     {
-      if (on[channelDisplayed][i] == true || currentStep == i)
+      if (currentStep == i) {
+        strip.setPixelColor( (i), strip.Color(color[0]/4, color[1]/4, color[2]/4) );
+        strip.show();
+      }
+      else if (on[channelDisplayed][i] == true || currentStep == i)
       {
         strip.setPixelColor( (i), strip.Color(color[0], color[1], color[2]) );
         strip.show();
@@ -385,6 +398,7 @@ void onLed()
       }
     }
   }
+
 }
 
 void noteSeq()
@@ -463,66 +477,7 @@ void noteSeq()
         }
       }
 
-      //SYNTH SEQUENCE
-      if (wavNum == 0)
-      {
-        waveform1.begin(WAVEFORM_SINE);
-
-        if (on[0][currentStep] == true)
-        {
-          waveform1.amplitude(0.2);
-          waveform1.frequency(potPitch[currentStep]);
-        }
-        else
-        {
-          waveform1.amplitude(0);
-        }
-      }
-
-      if (wavNum == 1)
-      {
-        waveform1.begin(WAVEFORM_SAWTOOTH);
-
-        if (on[0][currentStep] == true)
-        {
-          waveform1.amplitude(0.1);
-          waveform1.frequency(potPitch[currentStep]);
-        }
-        else
-        {
-          waveform1.amplitude(0);
-        }
-      }
-
-      if (wavNum == 2)
-      {
-        waveform1.begin(WAVEFORM_SQUARE);
-
-        if (on[0][currentStep] == true)
-        {
-          waveform1.amplitude(0.1);
-          waveform1.frequency(potPitch[currentStep]);
-        }
-        else
-        {
-          waveform1.amplitude(0);
-        }
-      }
-
-      if (wavNum == 3)
-      {
-        waveform1.begin(WAVEFORM_TRIANGLE);
-
-        if (on[0][currentStep] == true)
-        {
-          waveform1.amplitude(0.3);
-          waveform1.frequency(potPitch[currentStep]);
-        }
-        else
-        {
-          waveform1.amplitude(0);
-        }
-      }
+      wavSelection();
 
       //DRUM SEQUENCE
       AudioNoInterrupts();
@@ -560,6 +515,129 @@ void noteSeq()
       lastStepTime = millis();
     }
   }
+
+}
+
+void wavSelection()
+{
+  if (digitalRead(midiSwitch) == HIGH)
+  {
+    if (wavNum == 0)
+    {
+      waveform1.begin(WAVEFORM_SINE);
+    }
+
+    if (wavNum == 1)
+    {
+      waveform1.begin(WAVEFORM_SAWTOOTH);
+    }
+
+    if (wavNum == 2)
+    {
+      waveform1.begin(WAVEFORM_SQUARE);
+    }
+
+    if (wavNum == 3)
+    {
+      waveform1.begin(WAVEFORM_TRIANGLE);
+    }
+
+    for (int i = 0; i < 8; i++)
+    {
+      //      int loNote = 261.63;
+      //      int hiNote = 523.25;
+
+      int wavPitch[8] = {261.63, 293.67, 329.63, 349.23, 392, 440, 493.88, 523.25};
+      int wavPitchOct[8] = {523.25, 587.33, 659.26, 698.46, 783.99, 880, 987.77, 1046.5};
+
+      lastButtonState[i] = buttonState[i];
+      buttonState[i] = digitalRead(buttonPin[i]);
+
+      if (buttonState[i] == HIGH && lastButtonState[i] == LOW)
+      {
+        if (digitalRead(octaveSwitch) == LOW)
+        {
+          waveform1.amplitude(0.2);
+          waveform1.frequency(wavPitch[i]);
+        }
+
+        if (digitalRead(octaveSwitch) == HIGH)
+        {
+          waveform1.amplitude(0.2);
+          waveform1.frequency(wavPitchOct[i]);
+        }
+      }
+      else if (buttonState[i] == LOW && lastButtonState[i] == HIGH)
+      {
+        waveform1.amplitude(0);
+      }
+    }
+  }
+
+  if (digitalRead(midiSwitch) == LOW)
+  {
+    //SYNTH SEQUENCE
+    if (wavNum == 0)
+    {
+      waveform1.begin(WAVEFORM_SINE);
+
+      if (on[0][currentStep] == true)
+      {
+        waveform1.amplitude(0.2);
+        waveform1.frequency(potPitch[currentStep]);
+      }
+      else
+      {
+        waveform1.amplitude(0);
+      }
+    }
+
+    if (wavNum == 1)
+    {
+      waveform1.begin(WAVEFORM_SAWTOOTH);
+
+      if (on[0][currentStep] == true)
+      {
+        waveform1.amplitude(0.1);
+        waveform1.frequency(potPitch[currentStep]);
+      }
+      else
+      {
+        waveform1.amplitude(0);
+      }
+    }
+
+    if (wavNum == 2)
+    {
+      waveform1.begin(WAVEFORM_SQUARE);
+
+      if (on[0][currentStep] == true)
+      {
+        waveform1.amplitude(0.1);
+        waveform1.frequency(potPitch[currentStep]);
+      }
+      else
+      {
+        waveform1.amplitude(0);
+      }
+    }
+
+    if (wavNum == 3)
+    {
+      waveform1.begin(WAVEFORM_TRIANGLE);
+
+      if (on[0][currentStep] == true)
+      {
+        waveform1.amplitude(0.3);
+        waveform1.frequency(potPitch[currentStep]);
+      }
+      else
+      {
+        waveform1.amplitude(0);
+      }
+    }
+  }
+
 }
 
 //KEYBOARD MODE
@@ -593,4 +671,5 @@ void keyboardMidi()
       usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
     }
   }
+
 }
