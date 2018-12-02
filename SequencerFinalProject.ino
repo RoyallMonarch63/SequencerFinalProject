@@ -1,3 +1,10 @@
+//TO DO
+//-sync midi clock
+//-switch to keyboard mode
+//-octave apply to teensy synth
+//-volume output up
+//-blink lights if already on
+
 //waveform stuff
 #include <Audio.h>
 #include <Wire.h>
@@ -201,7 +208,7 @@ void testDrum()
 
 void stepUp()
 {
-  //step 0-3
+  //step 0-7
   currentStep = currentStep + 1;
   if (currentStep > 7)
   {
@@ -211,7 +218,7 @@ void stepUp()
 
 void stepDown()
 {
-  //step 3-0
+  //step 7-0
   currentStep = currentStep - 1;
   if (currentStep < 0)
   {
@@ -388,6 +395,15 @@ void noteSeq()
 
   if (millis() > lastStepTime + tempo)
   {
+    //if the backwards switch is on, step 3 - 0
+    if (digitalRead(backSwitch) == HIGH)
+    {
+      stepDown();
+    }
+    else
+    {
+      stepUp();
+    }
 
     //MIDI SEQUENCE
     for (int i = 0; i < 4; i++)
@@ -411,16 +427,6 @@ void noteSeq()
         }
 
       }
-    }
-
-    //if the backwards switch is on, step 3 - 0
-    if (digitalRead(backSwitch) == HIGH)
-    {
-      stepDown();
-    }
-    else
-    {
-      stepUp();
     }
 
     if (on[0][currentStep] == true)
