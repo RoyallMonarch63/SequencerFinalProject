@@ -113,6 +113,8 @@ unsigned long lastStepTime = 0;
 
 boolean lastButtonState[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
 boolean buttonState[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW };
+boolean lastButtonStateK[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW};
+boolean buttonStateK[8] = { LOW, LOW, LOW, LOW, LOW, LOW, LOW, LOW };
 boolean lastButtonStateWav[2] = { LOW, LOW};
 boolean buttonStateWav[2] = { LOW, LOW};
 
@@ -383,7 +385,7 @@ void onLed()
     for (int i = 0; i < 8; i++)
     {
       if (currentStep == i) {
-        strip.setPixelColor( (i), strip.Color(color[0]/4, color[1]/4, color[2]/4) );
+        strip.setPixelColor( (i), strip.Color(color[0] / 4, color[1] / 4, color[2] / 4) );
         strip.show();
       }
       else if (on[channelDisplayed][i] == true || currentStep == i)
@@ -421,6 +423,7 @@ void noteSeq()
   if (digitalRead(midiSwitch) == HIGH)
   {
     keyboardMidi();
+    wavSelection();
   }
 
   //DO SEQ
@@ -520,63 +523,69 @@ void noteSeq()
 
 void wavSelection()
 {
-  if (digitalRead(midiSwitch) == HIGH)
+  //SYNTH KEYS
+
+  if (wavNum == 0)
   {
-    if (wavNum == 0)
+    waveform1.begin(WAVEFORM_SINE);
+    //Serial.println("YEET");
+  }
+
+  if (wavNum == 1)
+  {
+    waveform1.begin(WAVEFORM_SAWTOOTH);
+  }
+
+  if (wavNum == 2)
+  {
+    waveform1.begin(WAVEFORM_SQUARE);
+  }
+
+  if (wavNum == 3)
+  {
+    waveform1.begin(WAVEFORM_TRIANGLE);
+  }
+
+  for (int i = 0; i < 8; i++)
+  {
+
+    //      int loNote = 261.63;
+    //      int hiNote = 523.25;
+
+    int wavPitch[8] = {261.63, 293.67, 329.63, 349.23, 392, 440, 493.88, 523.25};
+    int wavPitchOct[8] = {523.25, 587.33, 659.26, 698.46, 783.99, 880, 987.77, 1046.5};
+
+    lastButtonStateK[i] = buttonStateK[i];
+    buttonStateK[i] = digitalRead(buttonPin[i]);
+
+    // sSerial.println(i);
+
+    if (buttonStateK[i] == HIGH && lastButtonStateK[i] == LOW)
     {
-      waveform1.begin(WAVEFORM_SINE);
-    }
+      Serial.println("SUH");
 
-    if (wavNum == 1)
-    {
-      waveform1.begin(WAVEFORM_SAWTOOTH);
-    }
-
-    if (wavNum == 2)
-    {
-      waveform1.begin(WAVEFORM_SQUARE);
-    }
-
-    if (wavNum == 3)
-    {
-      waveform1.begin(WAVEFORM_TRIANGLE);
-    }
-
-    for (int i = 0; i < 8; i++)
-    {
-      //      int loNote = 261.63;
-      //      int hiNote = 523.25;
-
-      int wavPitch[8] = {261.63, 293.67, 329.63, 349.23, 392, 440, 493.88, 523.25};
-      int wavPitchOct[8] = {523.25, 587.33, 659.26, 698.46, 783.99, 880, 987.77, 1046.5};
-
-      lastButtonState[i] = buttonState[i];
-      buttonState[i] = digitalRead(buttonPin[i]);
-
-      if (buttonState[i] == HIGH && lastButtonState[i] == LOW)
+      if (digitalRead(octaveSwitch) == LOW)
       {
-        if (digitalRead(octaveSwitch) == LOW)
-        {
-          waveform1.amplitude(0.2);
-          waveform1.frequency(wavPitch[i]);
-        }
+        waveform1.amplitude(0.2);
+        waveform1.frequency(wavPitch[i]);
+      }
 
-        if (digitalRead(octaveSwitch) == HIGH)
-        {
-          waveform1.amplitude(0.2);
-          waveform1.frequency(wavPitchOct[i]);
-        }
-      }
-      else if (buttonState[i] == LOW && lastButtonState[i] == HIGH)
+      if (digitalRead(octaveSwitch) == HIGH)
       {
-        waveform1.amplitude(0);
+        waveform1.amplitude(0.2);
+        waveform1.frequency(wavPitchOct[i]);
       }
+    }
+    else if (buttonStateK[i] == LOW && lastButtonStateK[i] == HIGH)
+    {
+      waveform1.amplitude(0);
     }
   }
 
+
+  //SYNTH SEQUENCE
   if (digitalRead(midiSwitch) == LOW)
   {
-    //SYNTH SEQUENCE
     if (wavNum == 0)
     {
       waveform1.begin(WAVEFORM_SINE);
