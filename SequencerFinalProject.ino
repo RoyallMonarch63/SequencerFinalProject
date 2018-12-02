@@ -1,10 +1,3 @@
-//TO DO
-//-sync midi clock [/]
-//-switch to keyboard mode (MIDI AND SYNTH) [/]
-//-octave apply to teensy synth [/]
-//-volume output up [/]
-//-blink lights if already on
-
 //waveform stuff
 #include <Audio.h>
 #include <Wire.h>
