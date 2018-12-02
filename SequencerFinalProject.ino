@@ -1,7 +1,7 @@
 //TO DO
 //-sync midi clock [/]
-//-switch to keyboard mode
-//-octave apply to teensy synth [/]c
+//-switch to keyboard mode (MIDI AND SYNTH)
+//-octave apply to teensy synth [/]
 //-volume output up [/]
 //-blink lights if already on
 
@@ -97,11 +97,11 @@ int loMidi = 60;
 int hiMidi = 72;
 
 //SWITCHES
-int midiSwitch = 35;
+int octaveSwitch = 35;
 //(A16)
 int backSwitch = 34;
 //(A15)
-int octaveSwitch = 22;
+int midiSwitch = 22;
 //(A8)
 
 //STATE STUFF
@@ -155,6 +155,7 @@ void setup()
   pinMode(tempoPot, INPUT);
   pinMode(backSwitch, INPUT);
   pinMode(octaveSwitch, INPUT);
+  pinMode(midiSwitch, INPUT);
 
   pinMode(12, INPUT);
   pinMode(11, INPUT);
@@ -184,6 +185,20 @@ void loop()
   chanColor();
 
   selectWav();
+
+  //testMidSwitch();
+}
+
+void testMidSwitch()
+{
+  if (digitalRead(midiSwitch) == HIGH)
+  {
+    Serial.println ("ON");
+  }
+  if (digitalRead(midiSwitch) == LOW)
+  {
+    Serial.println ("OFF");
+  }
 }
 
 void stepUp()
