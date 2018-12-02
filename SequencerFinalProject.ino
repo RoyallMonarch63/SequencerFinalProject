@@ -1,8 +1,8 @@
 //TO DO
-//-sync midi clock
+//-sync midi clock [/]
 //-switch to keyboard mode
-//-octave apply to teensy synth
-//-volume output up
+//-octave apply to teensy synth [/]c
+//-volume output up [/]
 //-blink lights if already on
 
 //waveform stuff
@@ -165,6 +165,12 @@ void setup()
   strip.setBrightness(BRIGHTNESS);
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+
+  //Audio Stuff
+  for (int i = 0; i < 4; i++)
+  {
+    mixer1.gain(i, 4);
+  }
 }
 
 void loop()
@@ -178,32 +184,6 @@ void loop()
   chanColor();
 
   selectWav();
-
-  //checkOct();
-
-  //testDrum();
-
-  //testSwitch();
-}
-
-//void testSwitch()
-//{
-//  if (analogRead(A8) == HIGH)
-//  {
-//    //Serial.print("it work ");
-//    //delay (500);
-//  }
-//}
-
-void testDrum()
-{
-  tempo = map (analogRead(A13), 0, 1023, 50, 500);
-  drum1.noteOn();
-  delay(tempo);
-  drum2.noteOn();
-  delay(tempo);
-  drum3.noteOn();
-  delay(tempo);
 }
 
 void stepUp()
@@ -225,21 +205,6 @@ void stepDown()
     currentStep = 7;
   }
 }
-
-//void checkOct()
-//{
-//  if (digitalRead() == LOW)
-//  {
-//    int midiNotes[4] = {60, 62, 64, 66};
-//  }
-//
-//  if (digitalRead(22) == HIGH)
-//  {
-//    int midiNotes[4] = {72, 74, 76, 78};
-//    //Serial.print ("AY ");
-//    //delay (500);
-//  }
-//}
 
 void checkChannel()
 {
@@ -432,8 +397,16 @@ void noteSeq()
     if (on[0][currentStep] == true)
 
     {
-      potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
-      potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
+      if (digitalRead(octaveSwitch) == LOW)
+      {
+        potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
+        potPitch[currentStep] = loNote * pow(2, potQuantArray[currentStep] / 12.0);
+      }
+      if (digitalRead(octaveSwitch) == HIGH)
+      {
+        potQuantArray[currentStep] = map(analogRead(potPin[currentStep]), 0, 1023, 0, 12);
+        potPitch[currentStep] = hiNote * pow(2, potQuantArray[currentStep] / 12.0);
+      }
     }
 
     //SYNTH SEQUENCE
