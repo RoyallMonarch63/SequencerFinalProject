@@ -554,6 +554,7 @@ void noteSeq()
   }
 }
 
+//KEYBOARD MODE
 void keyboardMidi()
 {
   int keyMidi[8] = {60, 62, 64, 65, 67, 69, 71, 72};
@@ -566,16 +567,23 @@ void keyboardMidi()
 
     if (buttonState[i] == HIGH && lastButtonState[i] == LOW)
     {
-      if (digitalRead(octaveSwitch) == HIGH)
-      {
-        usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
-        usbMIDI.sendNoteOn(keyMidiOct[i], 127, 1);
-      }
-      if (digitalRead(octaveSwitch) == LOW)
-      {
-        usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
-        usbMIDI.sendNoteOn(keyMidi[i], 127, 1);
-      }
+      usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
+      usbMIDI.sendNoteOn(keyMidi[i], 127, 1);
+      //      if (digitalRead(octaveSwitch) == HIGH)
+      //      {
+      //        usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
+      //        usbMIDI.sendNoteOn(keyMidiOct[i], 127, 1);
+      //      }
+      //      if (digitalRead(octaveSwitch) == LOW)
+      //      {
+      //        usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
+      //        usbMIDI.sendNoteOn(keyMidi[i], 127, 1);
+      //      }
+    }
+
+    if (buttonState[i] == LOW)
+    {
+      usbMIDI.sendNoteOff(keyMidi[i], 127, 1);
     }
   }
 }
