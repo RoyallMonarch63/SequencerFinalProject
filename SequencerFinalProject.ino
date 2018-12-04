@@ -169,6 +169,7 @@ void setup()
   for (int i = 0; i < 4; i++)
   {
     mixer1.gain(i, 2);
+    //1.6?
   }
 }
 
@@ -585,7 +586,7 @@ void wavSelection()
 
       if (on[0][currentStep] == true)
       {
-        waveform1.amplitude(0.2);
+        waveform1.amplitude(0.15);
         waveform1.frequency(potPitch[currentStep]);
       }
       else
@@ -600,7 +601,7 @@ void wavSelection()
 
       if (on[0][currentStep] == true)
       {
-        waveform1.amplitude(0.1);
+        waveform1.amplitude(0.06);
         waveform1.frequency(potPitch[currentStep]);
       }
       else
@@ -615,7 +616,7 @@ void wavSelection()
 
       if (on[0][currentStep] == true)
       {
-        waveform1.amplitude(0.1);
+        waveform1.amplitude(0.06);
         waveform1.frequency(potPitch[currentStep]);
       }
       else
