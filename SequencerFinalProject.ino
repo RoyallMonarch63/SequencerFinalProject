@@ -674,5 +674,4 @@ void keyboardMidi()
       usbMIDI.sendNoteOff(keyMidiOct[i], 127, 1);
     }
   }
-
 }
